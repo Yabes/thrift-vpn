@@ -1,3 +1,4 @@
+---
 version: 0.2
 run-as: root
 phases:
@@ -8,7 +9,7 @@ phases:
       - apt-get install -qy unzip
       - curl --silent https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer.zip
       - unzip /tmp/packer.zip -d /usr/local/bin
-      - pip install aws-amicleaner
+      - pip install git+https://github.com/janus-anderwelt/aws-amicleaner.git
   build:
     on-failure: ABORT
     commands:
@@ -16,4 +17,4 @@ phases:
   post_build:
     commands:
       - aws ec2 describe-images --owners self --filters 'Name=name,Values=packer-debian-wireguard-thrift*'
-      - amicleaner -f --keep-previous 2
+      - amicleaner -f --keep-previous 1

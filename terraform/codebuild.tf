@@ -36,7 +36,7 @@ resource "aws_codebuild_project" "wg_build_ami" {
 
   source {
     type            = "GITHUB"
-    location        = "https://github.com/ninadsp/thrift-vpn.git"
+    location        = var.codebuild_source_repo
     git_clone_depth = 1
   }
 

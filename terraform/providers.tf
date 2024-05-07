@@ -3,3 +3,7 @@ provider "aws" {
 }
 
 provider "null" {}
+
+provider "ovh" {
+  endpoint = "ovh-eu"
+}

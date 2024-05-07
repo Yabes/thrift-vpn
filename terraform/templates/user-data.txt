@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 aws_region=${region}
 
 # Set a human readable instance name
@@ -13,29 +15,22 @@ if [[ -f /var/lib/cloud/data/instance-id ]] ; then
   aws ec2 create-tags --region $aws_region --resources "$(cat /var/lib/cloud/data/instance-id)" --tags Key=Name,Value=wg-$new_instance_name
 fi
 
-cat > /etc/wireguard/wg0.conf.tpl <<EOF
+# fetch priv key during start up
+wg_priv_key=$(aws ssm get-parameters --output text --region $aws_region --names ${wg_priv_key_path} --with-decryption --query 'Parameters[*].Value')
+
+cat | tee /etc/wireguard/wg0.conf <<EOF
 [Interface]
 Address = ${wg_server_listen_addr}
 ListenPort = ${wg_server_port}
-PrivateKey = __PRIVATE_KEY__
+PrivateKey = $${wg_priv_key}
 
 ${peers}
 EOF
 
-# fetch priv key during start up
-wg_priv_key=$(aws ssm get-parameters --output text --region $aws_region --names ${wg_priv_key_path} --with-decryption --query 'Parameters[*].Value')
+service nftables reload
 
-sed "s/__PRIVATE_KEY__/$wg_priv_key/g" /etc/wireguard/wg0.conf.tpl > /etc/wireguard/wg0.conf
-rm /etc/wireguard/wg0.conf.tpl
-
-ifname=$(ip link | awk -F: '$0 !~ "lo|vir|wl|wg|^[^0-9]"{print $2;getline}' | tr -d ' ')
-sed -i "s/define wan = ens5/define wan = $ifname/" /etc/nftables.conf
-sed -i "s/define vpn_port = 51820/define vpn_port = ${wg_server_port}/" /etc/nftables.conf
-sed -i "s/define vpn_net = 10.0.1.0\/24/define vpn_net = ${wg_server_listen_addr}\/24/" /etc/nftables.conf
-systemctl reload nftables
-
-systemctl enable wg-quick@wg0.service
-systemctl restart wg-quick@wg0.service
+wg-quick up wg0
 
 ${post_provisioning_steps}
 
+# vim:ft=sh

@@ -6,7 +6,8 @@ data "aws_ami" "wg_ami" {
   filter {
     name = "name"
     values = [
-    "packer-debian-wireguard-thrift*"]
+      "packer-*-wireguard-thrift*"
+    ]
   }
 
   filter {
@@ -45,7 +46,7 @@ locals {
 }
 
 resource "aws_launch_template" "wg_launch_template" {
-  name_prefix                          = "debian-wireguard-launch-template-"
+  name_prefix                          = "wireguard-launch-template-"
   image_id                             = data.aws_ami.wg_ami.id
   instance_type                        = var.instance_type
   ebs_optimized                        = true
@@ -80,6 +81,14 @@ resource "aws_launch_template" "wg_launch_template" {
   tags = {
     Terraform = true
     role      = "wireguard-vpn"
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Type = "thrift-vpn"
+    }
   }
 }
 

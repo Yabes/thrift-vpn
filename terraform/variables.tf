@@ -104,3 +104,14 @@ variable "post_provisioning_steps" {
   type        = string
   default     = ""
 }
+
+variable "codebuild_source_repo" {
+  description = "Code build source repo to use"
+  type        = string
+  default     = "https://github.com/Yabes/thrift-vpn.git"
+}
+
+variable "dns_zone" {
+  description = "DNS Zone to update with instance IP"
+  type        = string
+}

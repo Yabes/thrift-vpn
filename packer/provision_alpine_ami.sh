@@ -1,15 +1,15 @@
-#!/bin/bash
-#
-#
+#!/bin/sh
 
 set -ex
 
-sudo apt-get update -q
-sudo apt-get install -qy linux-headers-$(uname -r) wireguard nftables
+doas apk upgrade --no-cache
+doas apk --no-cache add wireguard-tools-wg wireguard-tools-wg-quick nftables aws-cli
 
-sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+echo 'net.ipv4.ip_forward=1' | doas tee /etc/sysctl.d/local.conf
 
-cat <<EOF > /tmp/nftables.conf
+doas mkdir -p /etc/wireguard/
+
+cat <<EOF | doas tee /etc/nftables.d/wireguard.nft
 # https://xdeb.org/post/2019/09/26/setting-up-a-server-firewall-with-nftables-that-support-wireguard-vpn/ - IPv4, relevant bits
 # Throw away the default Firewall rules
 flush ruleset
@@ -19,7 +19,7 @@ define vpn = wg0
 # These will be replaced during cloud-init with the appropriate values
 define vpn_port = 51820
 define vpn_net = 10.0.1.0/24
-define wan = ens5
+define wan = eth0
 
 table inet filter {
   
@@ -104,7 +104,16 @@ table ip nat {
 }
 EOF
 
-sudo mv /tmp/nftables.conf /etc/nftables.conf
+#cat <<EOF | doas tee -a /etc/network/interfaces
+#auto wg0
+#iface wg0 inet static
+#  address 10.0.0.1
+#  netmask 255.255.255.0
+#  pre-up ip link add dev wg0 type wireguard
+#  pre-up wg setconf wg0 /etc/wireguard/wg0.conf
+#  post-down ip link delete dev wg0
+#EOF
 
-sudo systemctl enable nftables
-sudo systemctl start nftables
+doas rc-update add nftables
+
+echo 'alpine:alpine34' | doas chpasswd

@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "wg_instance_profile_doc" {
 
     actions = ["ssm:GetParameters"]
 
-    resources = ["arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/wireguard/*"]
+    resources = ["arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/thrift-vpn/wireguard/*"]
   }
 
   statement {

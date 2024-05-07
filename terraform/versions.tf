@@ -9,5 +9,8 @@ terraform {
     null = {
       source = "hashicorp/null"
     }
+    ovh = {
+      source = "ovh/ovh"
+    }
   }
 }

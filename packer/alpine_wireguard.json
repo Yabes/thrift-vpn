@@ -5,7 +5,7 @@
     "region": "{{ env `AWS_DEFAULT_REGION` }}",
     "cpu_arch": "{{ env `CPU_ARCH`}}",
     "instance_type": "{{ env `INSTANCE_TYPE`}}",
-    "ami_name": "packer-debian-wireguard-thrift-{{user `cpu_arch`}}-{{timestamp}}"
+    "ami_name": "packer-alpine-wireguard-thrift-{{user `cpu_arch`}}-{{timestamp}}"
   },
   "builders": [
     {
@@ -19,12 +19,12 @@
         "filters": {
           "virtualization-type": "hvm",
           "root-device-type": "ebs",
-          "name": "debian-10-{{user `cpu_arch`}}-*"
+          "name": "alpine-3.19.1-x86_64-uefi-cloudinit-*"
         },
-        "owners": ["136693071363"],
+        "owners": ["538276064493"],
         "most_recent": true
       },
-      "ssh_username": "admin",
+      "ssh_username": "alpine",
       "tags": {
         "Name": "{{ user `ami_name` }}",
         "role": "wireguard-vpn"
@@ -33,12 +33,13 @@
         "Name": "snap-{{ user `ami_name` }}",
         "role": "wireguard-vpn"
       }
-    }  
+    }
   ],
   "provisioners": [
     {
       "type": "shell",
-      "script": "./provision_ami.sh"
+      "script": "./provision_alpine_ami.sh",
+      "execute_command": "sh -c '{{.Path}}'"
     }
   ]
 }
